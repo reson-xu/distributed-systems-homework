@@ -2,7 +2,7 @@
 
 ## 1. 设计范围
 
-当前阶段仅设计用户注册与登录接口，其它模块接口暂不展开。
+当前阶段设计用户认证接口与商品详情接口。
 
 统一前缀建议：
 
@@ -124,17 +124,49 @@
 - `username`
 - `token`
 
-## 6. 后续预留
+## 6. 商品接口
+
+### 6.1 商品详情
+
+- Method: `GET`
+- Path: `/api/v1/products/{productId}`
+- Description: 查询商品详情，服务端优先读取 Redis 缓存，未命中时回源数据库
+
+#### 响应体
+
+```json
+{
+  "code": "0",
+  "message": "success",
+  "data": {
+    "productId": 1,
+    "productName": "iPhone 16",
+    "price": 6999.00,
+    "status": 1,
+    "availableStock": 100
+  }
+}
+```
+
+### 6.2 字段说明
+
+- `productId`：商品ID
+- `productName`：商品名称
+- `price`：商品价格
+- `status`：商品状态
+- `availableStock`：可用库存
+
+## 7. 后续预留
 
 后续可继续补充以下接口，但当前阶段不纳入设计范围：
 
-- 商品查询
 - 库存查询
 - 订单创建
 
-## 7. 数据可见性约定
+## 8. 数据可见性约定
 
 - 面向业务侧的接口默认只返回 `is_deleted = 0` 的数据
 - 逻辑删除的数据不应通过普通查询接口返回
 - 后续新增删除类接口时，默认语义应为更新 `is_deleted = 1`
 - 当前登录接口默认通过响应体返回 JWT，后续如切换到 Cookie 鉴权，需要同步更新接口契约
+- 商品详情接口采用 Cache Aside 模式，Redis Key 使用统一规范 `seckill:业务域:数据类型:业务主键`

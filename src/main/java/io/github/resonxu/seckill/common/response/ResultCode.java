@@ -13,6 +13,7 @@ public enum ResultCode {
     USER_NOT_FOUND("1002", "user not found"),
     INVALID_CREDENTIALS("1003", "invalid credentials"),
     USER_DISABLED("1004", "user is disabled"),
+    PRODUCT_NOT_FOUND("2001", "product not found"),
     SYSTEM_ERROR("500", "system error");
 
     private final String code;
