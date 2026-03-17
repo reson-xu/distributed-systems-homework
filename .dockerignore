@@ -1,0 +1,9 @@
+.git
+.idea
+target
+README.md
+docker-compose.yml
+nginx
+agents
+docs
+resources
