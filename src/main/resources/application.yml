@@ -5,16 +5,15 @@ spring:
   application:
     name: distributed-systems-homework
   datasource:
-    url: jdbc:mariadb://${MARIADB_HOST:localhost}:${MARIADB_PORT:3306}/${MARIADB_DATABASE:seckill_db}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    username: ${MARIADB_USERNAME:root}
-    password: ${MARIADB_PASSWORD:root}
+    url: jdbc:mariadb://127.0.0.1:3306/seckill?useUnicode=true&characterEncoding=utf-8&autoReconnect=true&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 178zxc4726
     driver-class-name: org.mariadb.jdbc.Driver
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-      database: ${REDIS_DATABASE:0}
+      database: 0
+      host: 127.0.0.1
+      port: 6379
       timeout: 3000ms
 
 mybatis:
@@ -36,3 +35,8 @@ logging:
   level:
     root: INFO
     io.github.resonxu.seckill: INFO
+
+security:
+  jwt:
+    secret: ReplaceWithAtLeast32CharsJwtSecretKey123456
+    expiration: 7200
