@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: distributed-systems-homework
+  datasource:
+    url: jdbc:mariadb://${MARIADB_HOST:localhost}:${MARIADB_PORT:3306}/${MARIADB_DATABASE:seckill_db}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${MARIADB_USERNAME:root}
+    password: ${MARIADB_PASSWORD:root}
+    driver-class-name: org.mariadb.jdbc.Driver
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 3000ms
+
+mybatis:
+  mapper-locations: classpath:/mapper/**/*.xml
+  type-aliases-package: io.github.resonxu.seckill
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    io.github.resonxu.seckill: INFO
