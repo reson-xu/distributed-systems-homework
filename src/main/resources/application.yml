@@ -1,20 +1,20 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
     name: distributed-systems-homework
   datasource:
-    url: jdbc:mariadb://127.0.0.1:3306/seckill?useUnicode=true&characterEncoding=utf-8&autoReconnect=true&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: 178zxc4726
-    driver-class-name: org.mariadb.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://127.0.0.1:3306/seckill?useUnicode=true&characterEncoding=utf-8&autoReconnect=true&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.mariadb.jdbc.Driver}
   data:
     redis:
-      database: 0
-      host: 127.0.0.1
-      port: 6379
-      timeout: 3000ms
+      database: ${SPRING_DATA_REDIS_DATABASE:0}
+      host: ${SPRING_DATA_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: ${SPRING_DATA_REDIS_TIMEOUT:3000ms}
 
 mybatis:
   mapper-locations: classpath:/mapper/**/*.xml
@@ -38,5 +38,5 @@ logging:
 
 security:
   jwt:
-    secret: ReplaceWithAtLeast32CharsJwtSecretKey123456
-    expiration: 7200
+    secret: ${SECURITY_JWT_SECRET:ReplaceWithAtLeast32CharsJwtSecretKey123456}
+    expiration: ${SECURITY_JWT_EXPIRATION:7200}
