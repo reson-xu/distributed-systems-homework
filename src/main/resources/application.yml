@@ -5,10 +5,10 @@ spring:
   application:
     name: distributed-systems-homework
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://127.0.0.1:3306/seckill?useUnicode=true&characterEncoding=utf-8&autoReconnect=true&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
-    username: ${SPRING_DATASOURCE_USERNAME:root}
-    password: ${SPRING_DATASOURCE_PASSWORD:root}
-    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.mariadb.jdbc.Driver}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/seckill?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:resonxu}
+    password: ${SPRING_DATASOURCE_PASSWORD:178zxc4726}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
   data:
     redis:
       database: ${SPRING_DATA_REDIS_DATABASE:0}
@@ -40,3 +40,22 @@ security:
   jwt:
     secret: ${SECURITY_JWT_SECRET:ReplaceWithAtLeast32CharsJwtSecretKey123456}
     expiration: ${SECURITY_JWT_EXPIRATION:7200}
+
+rocketmq:
+  name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
+  producer:
+    group: ${ROCKETMQ_PRODUCER_GROUP:seckill-producer-group}
+    send-message-timeout: ${ROCKETMQ_PRODUCER_SEND_MESSAGE_TIMEOUT:3000}
+    retry-times-when-send-failed: ${ROCKETMQ_PRODUCER_RETRY_TIMES_WHEN_SEND_FAILED:2}
+    retry-times-when-send-async-failed: ${ROCKETMQ_PRODUCER_RETRY_TIMES_WHEN_SEND_ASYNC_FAILED:2}
+
+seckill:
+  rocketmq:
+    topics:
+      order-create: ${SECKILL_ROCKETMQ_TOPIC_ORDER_CREATE:seckill-order-create}
+      order-cancel: ${SECKILL_ROCKETMQ_TOPIC_ORDER_CANCEL:seckill-order-cancel}
+      inventory-compensate: ${SECKILL_ROCKETMQ_TOPIC_INVENTORY_COMPENSATE:seckill-inventory-compensate}
+    consumer-groups:
+      order-create: ${SECKILL_ROCKETMQ_CONSUMER_GROUP_ORDER_CREATE:seckill-order-create-consumer-group}
+      order-cancel: ${SECKILL_ROCKETMQ_CONSUMER_GROUP_ORDER_CANCEL:seckill-order-cancel-consumer-group}
+      inventory-compensate: ${SECKILL_ROCKETMQ_CONSUMER_GROUP_INVENTORY_COMPENSATE:seckill-inventory-compensate-consumer-group}

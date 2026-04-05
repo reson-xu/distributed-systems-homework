@@ -3,9 +3,12 @@ package io.github.resonxu.seckill.auth.interfaces.vo;
 import lombok.Builder;
 import lombok.Value;
 
+/**
+ * 用户登录结果视图对象。
+ */
 @Value
 @Builder
-public class AuthLoginResponse {
+public class AuthLoginVO {
 
     Long userId;
 

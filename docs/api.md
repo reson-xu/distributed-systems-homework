@@ -101,24 +101,24 @@
 - `userId`：用户唯一标识
 - `token`：登录成功后签发的 JWT 令牌
 
-## 5. DTO 建议
+## 5. DTO / VO 建议
 
-### 5.1 AuthRegisterRequest
+### 5.1 AuthRegisterDTO
 
 - `username`
 - `password`
 
-### 5.2 AuthRegisterResponse
+### 5.2 AuthRegisterVO
 
 - `userId`
 - `username`
 
-### 5.3 AuthLoginRequest
+### 5.3 AuthLoginDTO
 
 - `username`
 - `password`
 
-### 5.4 AuthLoginResponse
+### 5.4 AuthLoginVO
 
 - `userId`
 - `username`

@@ -7,10 +7,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.github.resonxu.seckill.auth.interfaces.dto.AuthLoginRequest;
-import io.github.resonxu.seckill.auth.interfaces.dto.AuthRegisterRequest;
-import io.github.resonxu.seckill.auth.interfaces.vo.AuthLoginResponse;
-import io.github.resonxu.seckill.auth.interfaces.vo.AuthRegisterResponse;
+import io.github.resonxu.seckill.auth.interfaces.dto.AuthLoginDTO;
+import io.github.resonxu.seckill.auth.interfaces.dto.AuthRegisterDTO;
+import io.github.resonxu.seckill.auth.interfaces.vo.AuthLoginVO;
+import io.github.resonxu.seckill.auth.interfaces.vo.AuthRegisterVO;
 import io.github.resonxu.seckill.common.exception.BusinessException;
 import io.github.resonxu.seckill.common.security.JwtTokenService;
 import io.github.resonxu.seckill.user.application.UserService;
@@ -41,7 +41,7 @@ class AuthServiceTest {
 
     @Test
     void shouldRegisterUserWhenUsernameNotExists() {
-        AuthRegisterRequest request = new AuthRegisterRequest();
+        AuthRegisterDTO request = new AuthRegisterDTO();
         request.setUsername("alice");
         request.setPassword("123456");
 
@@ -53,7 +53,7 @@ class AuthServiceTest {
             return user;
         });
 
-        AuthRegisterResponse response = authService.register(request);
+        AuthRegisterVO response = authService.register(request);
 
         assertEquals(1L, response.getUserId());
         assertEquals("alice", response.getUsername());
@@ -67,7 +67,7 @@ class AuthServiceTest {
 
     @Test
     void shouldRejectRegisterWhenUsernameAlreadyExists() {
-        AuthRegisterRequest request = new AuthRegisterRequest();
+        AuthRegisterDTO request = new AuthRegisterDTO();
         request.setUsername("alice");
         request.setPassword("123456");
 
@@ -79,7 +79,7 @@ class AuthServiceTest {
 
     @Test
     void shouldConvertDuplicateKeyDuringRegister() {
-        AuthRegisterRequest request = new AuthRegisterRequest();
+        AuthRegisterDTO request = new AuthRegisterDTO();
         request.setUsername("alice");
         request.setPassword("123456");
 
@@ -93,7 +93,7 @@ class AuthServiceTest {
 
     @Test
     void shouldLoginSuccessfully() {
-        AuthLoginRequest request = new AuthLoginRequest();
+        AuthLoginDTO request = new AuthLoginDTO();
         request.setUsername("alice");
         request.setPassword("123456");
 
@@ -107,7 +107,7 @@ class AuthServiceTest {
         when(passwordEncoder.matches("123456", "encoded-password")).thenReturn(true);
         when(jwtTokenService.generateToken(1L, "alice")).thenReturn("jwt-token");
 
-        AuthLoginResponse response = authService.login(request);
+        AuthLoginVO response = authService.login(request);
 
         assertEquals(1L, response.getUserId());
         assertEquals("alice", response.getUsername());
@@ -116,7 +116,7 @@ class AuthServiceTest {
 
     @Test
     void shouldRejectLoginWhenPasswordMismatch() {
-        AuthLoginRequest request = new AuthLoginRequest();
+        AuthLoginDTO request = new AuthLoginDTO();
         request.setUsername("alice");
         request.setPassword("123456");
 

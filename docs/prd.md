@@ -98,6 +98,6 @@
 
 ## 9. 假设与约束
 
-- 技术栈初步采用 Spring Boot、MyBatis、Redis、MariaDB
+- 技术栈初步采用 Spring Boot、MyBatis、Redis、MySQL
 - 当前阶段优先完成文档与框架设计
 - 后续可在不推翻现有结构的前提下逐步扩展商品、库存、订单能力

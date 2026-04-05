@@ -6,11 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 商品详情视图对象。
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductDetailResponse {
+public class ProductDetailVO {
 
     private Long productId;
 
