@@ -37,6 +37,16 @@ public interface RedisCacheClient {
     void setString(String key, String value, Duration ttl);
 
     /**
+     * 仅在 Key 不存在时写入字符串缓存。
+     *
+     * @param key 缓存 Key
+     * @param value 字符串值
+     * @param ttl 过期时间
+     * @return true 表示写入成功
+     */
+    boolean setIfAbsentString(String key, String value, Duration ttl);
+
+    /**
      * 删除缓存。
      *
      * @param key 缓存 Key

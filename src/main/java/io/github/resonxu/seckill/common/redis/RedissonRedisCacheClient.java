@@ -53,6 +53,12 @@ public class RedissonRedisCacheClient implements RedisCacheClient {
     }
 
     @Override
+    public boolean setIfAbsentString(String key, String value, Duration ttl) {
+        return redissonClient.getBucket(key, StringCodec.INSTANCE)
+                .trySet(value, ttl.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    @Override
     public boolean delete(String key) {
         return redissonClient.getBucket(key, StringCodec.INSTANCE).delete();
     }
