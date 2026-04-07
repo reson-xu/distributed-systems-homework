@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS t_user (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     UNIQUE KEY uk_username_is_deleted (username, is_deleted),
     KEY idx_is_deleted (is_deleted)
-) COMMENT='用户表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
 CREATE TABLE IF NOT EXISTS t_product (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS t_product (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     KEY idx_is_deleted (is_deleted)
-) COMMENT='商品表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品表';
 
 CREATE TABLE IF NOT EXISTS t_inventory (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS t_inventory (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     UNIQUE KEY uk_product_id_is_deleted (product_id, is_deleted),
     KEY idx_is_deleted (is_deleted)
-) COMMENT='库存表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='库存表';
 
 CREATE TABLE IF NOT EXISTS t_order (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
@@ -44,4 +44,4 @@ CREATE TABLE IF NOT EXISTS t_order (
     KEY idx_user_id (user_id),
     KEY idx_product_id (product_id),
     KEY idx_is_deleted (is_deleted)
-) COMMENT='订单表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';

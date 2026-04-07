@@ -31,7 +31,8 @@ Unless the repository evolves in a different direction, prefer the following sta
 - Spring Boot for service development
 - MyBatis for data access
 - Redis for cache, distributed coordination, rate limiting, and flash-sale protections
-- MariaDB as the primary relational database
+- MySQL as the primary relational database
+- RocketMQ for asynchronous order creation, buffering, and compensation-oriented event flow
 - OpenAPI 3 for API documentation
 - Maven as the default build tool unless Gradle is explicitly introduced
 
@@ -223,7 +224,7 @@ API design guidelines:
 
 ## 10. Database and Persistence Guidelines
 
-For MariaDB and MyBatis usage:
+For MySQL and MyBatis usage:
 
 - Keep SQL explicit and readable
 - Do not hide complex business logic inside mapper XML

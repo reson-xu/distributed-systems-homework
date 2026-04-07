@@ -1,19 +1,22 @@
 package io.github.resonxu.seckill.auth.application;
 
+import io.github.resonxu.seckill.auth.interfaces.dto.AuthLoginDTO;
+import io.github.resonxu.seckill.auth.interfaces.dto.AuthRegisterDTO;
+import io.github.resonxu.seckill.auth.interfaces.vo.AuthLoginVO;
+import io.github.resonxu.seckill.auth.interfaces.vo.AuthRegisterVO;
 import io.github.resonxu.seckill.common.exception.BusinessException;
 import io.github.resonxu.seckill.common.response.ResultCode;
 import io.github.resonxu.seckill.common.security.JwtTokenService;
 import io.github.resonxu.seckill.user.application.UserService;
 import io.github.resonxu.seckill.user.domain.model.User;
-import io.github.resonxu.seckill.auth.interfaces.dto.AuthLoginRequest;
-import io.github.resonxu.seckill.auth.interfaces.dto.AuthRegisterRequest;
-import io.github.resonxu.seckill.auth.interfaces.vo.AuthLoginResponse;
-import io.github.resonxu.seckill.auth.interfaces.vo.AuthRegisterResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * 处理认证相关应用服务。
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -30,7 +33,7 @@ public class AuthService {
      * @param request 注册请求
      * @return 注册结果
      */
-    public AuthRegisterResponse register(AuthRegisterRequest request) {
+    public AuthRegisterVO register(AuthRegisterDTO request) {
         User existingUser = userService.findActiveByUsername(request.getUsername());
         if (existingUser != null) {
             throw new BusinessException(ResultCode.USERNAME_ALREADY_EXISTS);
@@ -48,7 +51,7 @@ public class AuthService {
             throw new BusinessException(ResultCode.USERNAME_ALREADY_EXISTS);
         }
 
-        return AuthRegisterResponse.builder()
+        return AuthRegisterVO.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
                 .build();
@@ -60,7 +63,7 @@ public class AuthService {
      * @param request 登录请求
      * @return 登录结果
      */
-    public AuthLoginResponse login(AuthLoginRequest request) {
+    public AuthLoginVO login(AuthLoginDTO request) {
         User user = userService.findActiveByUsername(request.getUsername());
         if (user == null) {
             throw new BusinessException(ResultCode.INVALID_CREDENTIALS);
@@ -73,7 +76,7 @@ public class AuthService {
         }
 
         String token = jwtTokenService.generateToken(user.getId(), user.getUsername());
-        return AuthLoginResponse.builder()
+        return AuthLoginVO.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
                 .token(token)

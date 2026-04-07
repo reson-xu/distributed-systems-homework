@@ -101,24 +101,24 @@
 - `userId`：用户唯一标识
 - `token`：登录成功后签发的 JWT 令牌
 
-## 5. DTO 建议
+## 5. DTO / VO 建议
 
-### 5.1 AuthRegisterRequest
+### 5.1 AuthRegisterDTO
 
 - `username`
 - `password`
 
-### 5.2 AuthRegisterResponse
+### 5.2 AuthRegisterVO
 
 - `userId`
 - `username`
 
-### 5.3 AuthLoginRequest
+### 5.3 AuthLoginDTO
 
 - `username`
 - `password`
 
-### 5.4 AuthLoginResponse
+### 5.4 AuthLoginVO
 
 - `userId`
 - `username`
@@ -163,7 +163,46 @@
 - 库存查询
 - 订单创建
 
-## 8. 数据可见性约定
+## 8. 秒杀订单接口
+
+### 8.1 提交秒杀订单
+
+- Method: `POST`
+- Path: `/api/v1/seckill/orders`
+- Header: `Authorization: Bearer <JWT>`
+- Description: 受理秒杀下单请求，完成幂等校验、Redis 预扣库存，并异步发送 RocketMQ 下单消息
+
+#### 请求体
+
+```json
+{
+  "productId": 1,
+  "requestId": "req-20260405-0001"
+}
+```
+
+#### 响应体
+
+```json
+{
+  "code": "0",
+  "message": "success",
+  "data": {
+    "orderId": 1911111111111111111,
+    "status": "PENDING_CREATE"
+  }
+}
+```
+
+### 8.2 业务失败码
+
+- `3001`：重复秒杀同一商品
+- `3002`：库存不足
+- `3003`：商品不处于可秒杀状态
+- `3004`：重复请求
+- `3005`：秒杀请求提交失败
+
+## 9. 数据可见性约定
 
 - 面向业务侧的接口默认只返回 `is_deleted = 0` 的数据
 - 逻辑删除的数据不应通过普通查询接口返回
