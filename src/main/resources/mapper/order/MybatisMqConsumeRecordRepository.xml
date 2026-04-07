@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.resonxu.seckill.order.infrastructure.persistence.MybatisMqConsumeRecordRepository">
+
+    <resultMap id="MqConsumeRecordResultMap" type="io.github.resonxu.seckill.order.domain.model.MqConsumeRecord">
+        <id property="id" column="id"/>
+        <result property="bizType" column="biz_type"/>
+        <result property="messageKey" column="message_key"/>
+        <result property="consumeStatus" column="consume_status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByBizTypeAndMessageKey" resultMap="MqConsumeRecordResultMap">
+        SELECT id,
+               biz_type,
+               message_key,
+               consume_status,
+               created_at,
+               updated_at
+        FROM t_mq_consume_record
+        WHERE biz_type = #{bizType}
+          AND message_key = #{messageKey}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="io.github.resonxu.seckill.order.domain.model.MqConsumeRecord">
+        INSERT INTO t_mq_consume_record (
+            biz_type,
+            message_key,
+            consume_status
+        ) VALUES (
+            #{bizType},
+            #{messageKey},
+            #{consumeStatus}
+        )
+    </insert>
+
+    <update id="updateConsumeStatus">
+        UPDATE t_mq_consume_record
+        SET consume_status = #{consumeStatus}
+        WHERE biz_type = #{bizType}
+          AND message_key = #{messageKey}
+    </update>
+</mapper>
