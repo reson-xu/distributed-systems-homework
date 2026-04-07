@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.resonxu.seckill.inventory.infrastructure.persistence.MybatisInventoryFlowRepository">
+
+    <insert id="insert" parameterType="io.github.resonxu.seckill.inventory.domain.model.InventoryFlow">
+        INSERT INTO t_inventory_flow (
+            biz_id,
+            product_id,
+            flow_type,
+            change_count,
+            before_available_stock,
+            after_available_stock,
+            source_event
+        ) VALUES (
+            #{bizId},
+            #{productId},
+            #{flowType},
+            #{changeCount},
+            #{beforeAvailableStock},
+            #{afterAvailableStock},
+            #{sourceEvent}
+        )
+    </insert>
+</mapper>
