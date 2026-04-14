@@ -1,0 +1,45 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/auth/**
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/v1/products/**
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/v1/seckill/orders/**,/api/v1/orders/**
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/v1/inventories/**
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/v1/payments/**
+
+security:
+  jwt:
+    secret: ${SECURITY_JWT_SECRET:ReplaceWithAtLeast32CharsJwtSecretKey123456}
+    expiration: ${SECURITY_JWT_EXPIRATION:7200}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

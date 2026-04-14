@@ -75,3 +75,18 @@ CREATE TABLE IF NOT EXISTS t_inventory_flow (
     KEY idx_biz_id (biz_id),
     KEY idx_product_id (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='库存流水表';
+
+CREATE TABLE IF NOT EXISTS t_payment_order (
+    id BIGINT PRIMARY KEY COMMENT '支付单ID',
+    order_id BIGINT NOT NULL COMMENT '业务订单ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    request_id VARCHAR(64) NOT NULL COMMENT '支付请求幂等ID',
+    payment_amount DECIMAL(10, 2) NOT NULL COMMENT '支付金额',
+    payment_status TINYINT NOT NULL DEFAULT 0 COMMENT '支付状态',
+    fail_reason VARCHAR(256) DEFAULT NULL COMMENT '失败原因',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_payment_request_id (request_id),
+    UNIQUE KEY uk_payment_order_id (order_id),
+    KEY idx_payment_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='支付单表';

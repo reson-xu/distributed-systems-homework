@@ -1,0 +1,27 @@
+FROM maven:3.9.9-eclipse-temurin-17 AS builder
+
+WORKDIR /build
+
+ARG MODULE_PATH
+ARG ARTIFACT_NAME
+
+COPY pom.xml .
+COPY framework ./framework
+COPY services ./services
+COPY resources ./resources
+COPY deploy ./deploy
+
+RUN mvn -pl ${MODULE_PATH} -am clean package -DskipTests
+
+FROM eclipse-temurin:17-jre
+
+WORKDIR /app
+
+ARG MODULE_PATH
+ARG ARTIFACT_NAME
+
+COPY --from=builder /build/${MODULE_PATH}/target/${ARTIFACT_NAME}-0.0.1-SNAPSHOT.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

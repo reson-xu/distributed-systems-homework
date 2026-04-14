@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.resonxu.seckill.order.infrastructure.persistence.MybatisOrderRepository">
+
+    <resultMap id="SeckillOrderResultMap" type="io.github.resonxu.seckill.order.domain.model.SeckillOrder">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="orderAmount" column="order_amount"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="failReason" column="fail_reason"/>
+        <result property="createSource" column="create_source"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="SeckillOrderResultMap">
+        SELECT id,
+               user_id,
+               product_id,
+               request_id,
+               order_amount,
+               order_status,
+               fail_reason,
+               create_source,
+               created_at,
+               updated_at
+        FROM t_order
+        WHERE id = #{orderId}
+          AND is_deleted = 0
+        LIMIT 1
+    </select>
+
+    <select id="findByIdAndUserId" resultMap="SeckillOrderResultMap">
+        SELECT id,
+               user_id,
+               product_id,
+               request_id,
+               order_amount,
+               order_status,
+               fail_reason,
+               create_source,
+               created_at,
+               updated_at
+        FROM t_order
+        WHERE id = #{orderId}
+          AND user_id = #{userId}
+          AND is_deleted = 0
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="io.github.resonxu.seckill.order.domain.model.SeckillOrder">
+        INSERT INTO t_order (
+            id,
+            user_id,
+            product_id,
+            request_id,
+            order_amount,
+            order_status,
+            fail_reason,
+            create_source
+        ) VALUES (
+            #{id},
+            #{userId},
+            #{productId},
+            #{requestId},
+            #{orderAmount},
+            #{orderStatus},
+            #{failReason},
+            #{createSource}
+        )
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE t_order
+        SET order_status = #{targetStatus},
+            fail_reason = #{failReason}
+        WHERE id = #{orderId}
+          AND order_status = #{expectedStatus}
+          AND is_deleted = 0
+    </update>
+</mapper>

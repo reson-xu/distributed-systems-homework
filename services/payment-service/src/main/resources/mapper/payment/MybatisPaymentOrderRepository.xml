@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.resonxu.seckill.payment.infrastructure.persistence.MybatisPaymentOrderRepository">
+
+    <resultMap id="PaymentOrderResultMap" type="io.github.resonxu.seckill.payment.domain.model.PaymentOrder">
+        <id property="id" column="id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="paymentAmount" column="payment_amount"/>
+        <result property="paymentStatus" column="payment_status"/>
+        <result property="failReason" column="fail_reason"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByRequestId" resultMap="PaymentOrderResultMap">
+        SELECT id,
+               order_id,
+               user_id,
+               request_id,
+               payment_amount,
+               payment_status,
+               fail_reason,
+               created_at,
+               updated_at
+        FROM t_payment_order
+        WHERE request_id = #{requestId}
+        LIMIT 1
+    </select>
+
+    <select id="findByOrderId" resultMap="PaymentOrderResultMap">
+        SELECT id,
+               order_id,
+               user_id,
+               request_id,
+               payment_amount,
+               payment_status,
+               fail_reason,
+               created_at,
+               updated_at
+        FROM t_payment_order
+        WHERE order_id = #{orderId}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="io.github.resonxu.seckill.payment.domain.model.PaymentOrder">
+        INSERT INTO t_payment_order (
+            id,
+            order_id,
+            user_id,
+            request_id,
+            payment_amount,
+            payment_status,
+            fail_reason
+        ) VALUES (
+            #{id},
+            #{orderId},
+            #{userId},
+            #{requestId},
+            #{paymentAmount},
+            #{paymentStatus},
+            #{failReason}
+        )
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE t_payment_order
+        SET payment_status = #{paymentStatus},
+            fail_reason = #{failReason}
+        WHERE id = #{paymentId}
+    </update>
+</mapper>

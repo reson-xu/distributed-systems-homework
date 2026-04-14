@@ -1,0 +1,10 @@
+.idea/
+.codex/
+target/
+*.iml
+docker-service/rocketmq/namesrv/logs/*
+docker-service/rocketmq/broker/logs/*
+docker-service/rocketmq/broker/store/*
+!docker-service/rocketmq/namesrv/logs/.gitkeep
+!docker-service/rocketmq/broker/logs/.gitkeep
+!docker-service/rocketmq/broker/store/.gitkeep
