@@ -2,329 +2,288 @@
 
 ## 1. Project Overview
 
-This repository is intended for a distributed product inventory and flash-sale system.
+This repository is a distributed flash-sale and product inventory system built around independent microservices.
 
-The initial business scope includes:
+The current core business services are:
 
+- Gateway Service
 - User Service
 - Product Service
 - Order Service
 - Inventory Service
+- Payment Service
 
-The system is expected to support high-concurrency purchase scenarios, especially flash-sale events, while maintaining correctness for stock deduction, order creation, and user purchase constraints.
+The system targets high-concurrency seckill scenarios and emphasizes correctness, clear service boundaries, and event-driven consistency.
 
-## 2. Primary Goals
+## 2. Current Repository State
 
-All contributors and coding agents should optimize for the following goals:
+This repository is already a Maven multi-module microservice project.
 
-- Correctness first, especially for stock consistency and order integrity
-- Clear service boundaries and maintainable modular design
-- High availability and graceful degradation under traffic spikes
-- Observability, traceability, and operational simplicity
-- Clean, readable, and production-oriented Java code
-
-## 3. Suggested Tech Stack
-
-Unless the repository evolves in a different direction, prefer the following stack:
-
-- Java 17+ if not constrained otherwise
-- Spring Boot for service development
-- MyBatis for data access
-- Redis for cache, distributed coordination, rate limiting, and flash-sale protections
-- MySQL as the primary relational database
-- RocketMQ for asynchronous order creation, buffering, and compensation-oriented event flow
-- OpenAPI 3 for API documentation
-- Maven as the default build tool unless Gradle is explicitly introduced
-
-## 4. Current Repository State
-
-At the time this document is initialized, the repository does not yet contain the actual Java project skeleton, build files, or runtime modules.
-
-Until the codebase is bootstrapped:
-
-- Treat this file as the baseline collaboration contract
-- Keep future project initialization aligned with the service boundaries and standards defined here
-- Update this file once actual module names, package names, and build commands are finalized
-
-### 4.1 Collaboration Assets
-
-The repository should keep a lightweight collaboration structure:
+Current top-level structure:
 
 ```text
-agents/
-  product.md
-  architect.md
-  engineer.md
-  reviewer.md
+framework/
+  framework-core/
+  framework-web/
+services/
+  gateway-service/
+  user-service/
+  product-service/
+  order-service/
+  inventory-service/
+  payment-service/
+deploy/
 docs/
-  prd.md
-  architecture.md
-  api.md
+resources/
+pom.xml
 ```
 
-Purpose of these directories:
+Any new work should align with this actual structure rather than the old single-module assumptions.
 
-- `agents/` stores role-specific prompts and execution expectations
-- `docs/` stores the working product, architecture, and API design documents
+## 3. Primary Goals
 
-### 4.2 Agent Ownership Mapping
+All contributors and coding agents should optimize for:
 
-Use the following ownership model by default:
+- Correctness first, especially for stock consistency, order integrity, and payment/order state correctness
+- Clear microservice boundaries and maintainable modular design
+- High availability and graceful degradation under traffic spikes
+- Event-driven consistency where local database transactions cannot cross service boundaries
+- Clean, readable, production-oriented Java code
 
-- Product Agent -> PRD definition and refinement in `docs/prd.md`
-- Architect Agent -> system architecture design in `docs/architecture.md`
-- Engineer Agent -> implementation and API contract alignment, including `docs/api.md`
-- Reviewer Agent -> review of requirements, architecture, code quality, risks, and test coverage
+## 4. Suggested Tech Stack
 
-### 4.3 Standard Collaboration Flow
+Unless the repository intentionally changes direction, prefer:
 
-The expected delivery sequence is:
+- Java 17+
+- Spring Boot
+- Spring Cloud / Spring Cloud Alibaba
+- Spring Cloud Gateway
+- OpenFeign for synchronous inter-service calls
+- MyBatis for persistence
+- Redis for hot-path protection, caching, and idempotency support
+- MySQL as the primary relational database
+- RocketMQ for asynchronous event flow and eventual consistency
+- OpenAPI 3 for API documentation
+- Maven as the build tool
 
-1. Product Agent clarifies scope, business rules, user journeys, constraints, and acceptance criteria
-2. Architect Agent translates the PRD into service boundaries, data flow, consistency design, and deployment-oriented technical decisions
-3. Engineer Agent implements the solution based on approved requirements and architecture, and keeps the API specification aligned with the implementation
-4. Reviewer Agent evaluates correctness, maintainability, concurrency safety, test quality, and documentation completeness
+## 5. Service Boundaries
 
-Collaboration rules:
+### 5.1 Gateway Service
 
-- Do not skip PRD clarification for ambiguous requirements
-- Do not start implementation before core architecture decisions are documented
-- Update `docs/api.md` whenever an externally exposed API is added or changed
-- Reviewer findings take precedence over convenience when correctness or stability is at risk
-- Keep prompts and documents synchronized with actual repository practices
+- Unified traffic entry
+- Route forwarding
+- JWT parsing
+- User identity relay to downstream services
 
-## 5. Recommended Service Boundaries
+### 5.2 User Service
 
-Use the following service responsibilities as the baseline:
+- User registration
+- User login
+- JWT issuance
+- Future user eligibility and anti-abuse checks
 
-### 5.1 User Service
+### 5.3 Product Service
 
-- User registration, login, profile, and identity-related capabilities
-- User eligibility checks for flash-sale activities
-- User-level purchase restrictions and anti-abuse support
+- Product basic information
+- Product detail query
+- Product availability query
+- Redis-based product detail caching and hotspot protection
 
-### 5.2 Product Service
+### 5.4 Order Service
 
-- Product basic information and product detail query
-- Product status management
-- Flash-sale product metadata management
+- Seckill order submission
+- Order query
+- Order creation result handling
+- Payment result consumption and order status transitions
 
-### 5.3 Order Service
-
-- Order creation, query, status transitions, and idempotent processing
-- Order timeout, cancellation, and compensation handling
-- Integration with inventory reservation and deduction results
-
-### 5.4 Inventory Service
+### 5.5 Inventory Service
 
 - Available stock management
-- Reserved stock and deduction workflow
-- Anti-oversell control
-- High-concurrency inventory protection during flash-sale events
+- Stock deduction
+- Inventory flow recording
+- Inventory result event publishing
 
-## 6. Architecture and Design Principles
+### 5.6 Payment Service
+
+- Payment submission
+- Payment order persistence
+- Payment result event publishing
+
+## 6. Architecture Principles
 
 Follow these principles by default:
 
-- Prefer clear layered architecture: controller, application/service, domain, infrastructure, persistence
-- Keep business rules in service/domain layers, not in controllers or mapper XML
-- Design for idempotency in all critical write operations
+- Preserve strict service boundaries
+- Do not let one service write another service's tables directly
+- Use local transactions inside a single service only
+- Use RocketMQ to drive cross-service consistency when needed
+- Design all critical write paths for idempotency
 - Avoid overselling under any circumstance
-- Separate normal inventory flow from flash-sale hot-path optimizations when needed
-- Use Redis and database together carefully; do not assume cache equals truth
-- Make trade-offs explicit when consistency, throughput, and latency are in tension
+- Do not treat Redis as final truth
+- Keep business rules out of controllers and mapper XML
 
-For flash-sale scenarios, contributors should explicitly consider:
+For seckill scenarios, always consider:
 
-- Pre-deduction or reservation strategy
+- Redis pre-deduction or reservation
 - Duplicate order prevention
-- User purchase limit enforcement
-- Request throttling and rate limiting
-- Message-driven async processing if introduced later
-- Compensation and recovery logic for partial failures
+- User purchase limits
+- Message retry safety
+- Compensation and recovery logic
+- Order status machine clarity
 
 ## 7. Code Organization Conventions
 
-When the repository structure is created, prefer a layout similar to:
+Keep changes inside the right module boundary.
 
-```text
-src/main/java/io/github/resonxu/seckill
-  /common
-  /config
-  /user
-  /product
-  /order
-  /inventory
-src/main/resources
-  /mapper
-  /application.yml
-src/test/java
-```
+Module guidance:
 
-General module guidance:
+- `framework-core`
+  Shared base response models, business exceptions, annotations, and stable cross-service utilities
+- `framework-web`
+  Shared web-layer concerns such as global exception handling and common AOP
+- `services/*`
+  Business capabilities owned by each service
 
-- Put shared utilities in `common`, but do not turn it into a dumping ground
-- Keep each bounded context internally cohesive
-- Use package names that reflect business capability, not vague technical labels
-- Keep DTO, VO, DO, and entity naming consistent across services
-- Keep collaboration documents in `docs/` and role prompts in `agents/`
+Inside a service, prefer packages that keep technical responsibilities understandable, such as:
 
-## 8. Java and Coding Standards
+- `application`
+- `domain`
+- `interfaces`
+- `infrastructure`
+- `config`
 
-All code should follow:
+If a service starts getting crowded, further split by:
 
-- Alibaba Java Development Manual
-- Standard Java best practices
-- Spring Boot project conventions already adopted in the repository
+- `controller`
+- `client` or `remote`
+- `mq`
+- `persistence`
 
-Key expectations:
+Do not move business-specific constants such as Redis keys into shared framework modules unless they are truly cross-service.
 
-- Use meaningful class, method, and variable names
-- Keep methods focused and short where practical
-- Avoid deeply nested conditionals; prefer early return
-- Do not use magic numbers; extract constants with meaningful names
-- Minimize duplicated logic
-- Prefer composition over overly complex inheritance
-- Use enums for bounded business states
-- Handle null values explicitly and defensively
-- Log with context, but never log secrets or sensitive data
+## 8. API and Documentation Rules
 
-Formatting and style:
-
-- Keep code readable and consistent rather than clever
-- Use Lombok only when it clearly reduces boilerplate without harming readability
-- Avoid unnecessary static utility classes for business logic
-- Do not mix controller request models with persistence models
-
-## 9. API and OpenAPI Standards
-
-All externally exposed APIs should be documented with OpenAPI-compatible annotations and clear comments.
+All externally exposed APIs should remain documented with OpenAPI-compatible annotations.
 
 Requirements:
 
-- Add clear endpoint summaries and descriptions
-- Document request and response models
-- Document validation constraints and business limitations
-- Keep field names precise and stable
-- Use explicit error codes and messages
-
-Recommended annotation direction:
-
+- Use `@Tag` for controller grouping
 - Use `@Operation` for endpoint summary and description
-- Use `@Schema` for request and response fields
-- Use `@Tag` to group controllers by business domain
+- Use `@Schema` for DTO and VO field documentation where appropriate
+- Keep `docs/api.md` aligned with actual controller behavior
 
-API design guidelines:
+When adding or changing public endpoints:
 
-- Prefer RESTful naming where practical
-- Keep write APIs idempotent whenever possible
-- Standardize response structure if the project adopts a common wrapper
-- Clearly distinguish business failure from system failure
-- Keep `docs/api.md` aligned with controller definitions and OpenAPI annotations
+- Update controller annotations
+- Update `docs/api.md`
+- Update runbook or deployment docs if service dependencies change
 
-## 10. Database and Persistence Guidelines
+## 9. Database and Persistence Rules
 
 For MySQL and MyBatis usage:
 
 - Keep SQL explicit and readable
-- Do not hide complex business logic inside mapper XML
-- Add indexes intentionally based on query patterns
-- Design unique constraints to support idempotency and business invariants
-- Use transactions only where necessary and keep transaction scopes tight
-- Be explicit about isolation and locking strategy in inventory deduction paths
+- Do not hide business decisions inside mapper XML
+- Add indexes intentionally
+- Use unique constraints to enforce idempotency and invariants
+- Keep transaction scopes tight
+- Be explicit about status transitions and conditional updates
 
-Inventory and order tables should be designed with care for:
+Current important tables include:
 
-- Stock correctness
-- Order uniqueness
-- User purchase constraints
-- Timeout and cancellation recovery
+- `t_user`
+- `t_product`
+- `t_inventory`
+- `t_inventory_flow`
+- `t_order`
+- `t_payment_order`
+- `t_mq_consume_record`
 
-## 11. Redis Usage Guidelines
+Schema updates should be reflected in `resources/database/init_schema.sql`.
 
-Redis may be used for:
+## 10. Redis Usage Rules
 
+Redis is appropriate for:
+
+- Seckill stock pre-deduction
+- One-user-one-order restriction
 - Hot data caching
-- Flash-sale token control
-- Rate limiting
-- Distributed locking only when truly necessary
-- Deduplication or idempotency markers
+- Short-lived idempotency keys
+- Hotspot protection locks when justified
 
-Important rules:
+Rules:
 
-- Do not rely on Redis alone for final consistency
-- Set TTLs intentionally and document why they exist
-- Prevent cache breakdown, penetration, and avalanche where relevant
-- Prefer atomic operations or Lua scripts for critical high-concurrency paths
+- Final consistency must still be guaranteed by service-local DB state plus event flow
+- Use TTLs intentionally
+- Prefer atomic Lua scripts on critical hot paths
+- Keep Redis keys owned by the service that uses them
 
-## 12. Error Handling and Observability
+## 11. MQ and Consistency Rules
 
-All services should:
+RocketMQ is the default mechanism for cross-service eventual consistency.
 
-- Use consistent exception handling
-- Return stable and documented error responses
-- Log enough context to troubleshoot production issues
-- Include trace or request correlation where infrastructure supports it
+Current consistency chains in the repository include:
 
-For flash-sale and inventory paths, logs and metrics should make it possible to inspect:
+- `order-service -> inventory-service -> order-service`
+- `payment-service -> order-service`
 
-- Stock deduction attempts
-- Reservation success or failure
-- Duplicate order interception
-- Rate limit triggers
-- Compensation execution
+Expectations:
 
-## 13. Build, Run, and Verification Guidance
+- Consumers must be idempotent
+- Message retries must not create duplicate business data
+- Status transitions must be conditionally updated
+- Compensation paths should be explicit when failures can leave partial state behind
 
-Once the project skeleton is created, prefer standard Maven commands such as:
+## 12. Build, Run, and Verification Guidance
+
+Preferred commands:
 
 ```text
 mvn clean test
-mvn spotless:check
-mvn spring-boot:run
+mvn clean package -DskipTests
+mvn -pl services/order-service spring-boot:run
+docker-compose -f deploy/docker-compose.microservices.yml up -d --build
 ```
 
-If the repository adopts different plugins or build tooling later, update this section immediately.
-
-Before opening a PR, contributors should run the relevant local verification for:
+Before pushing significant changes, run the most relevant local verification for:
 
 - Compilation
-- Unit tests
-- Integration tests where available
-- Static checks or formatting checks if configured
+- Unit tests where available
+- Service-module packaging
+- Compose config validation if deployment files changed
 
-## 14. Testing Expectations
+## 13. Testing Expectations
 
-Testing is required for all important business logic.
+Testing is required for important business logic.
 
-Prefer the following:
+Prefer:
 
-- Unit tests for core business rules
-- Integration tests for database and Redis interactions
-- Concurrency tests for inventory deduction and flash-sale flows
-- API tests for critical endpoints
+- Unit tests for application and domain rules
+- Integration tests for MyBatis, Redis, and MQ-adjacent logic where practical
+- Concurrency tests for stock deduction and duplicate-order prevention
+- API tests for critical entry points
 
 At minimum, verify:
 
 - No overselling
-- Duplicate order prevention works
-- Idempotency logic works
-- Timeout and cancellation paths are correct
-- Failure and retry paths are safe
+- Duplicate order prevention
+- Idempotent MQ consumption
+- Safe order status transitions
+- Safe payment result handling
 
-## 15. Security and Compliance Basics
+## 14. Security and Compliance Basics
 
 All contributors should:
 
 - Validate input strictly
-- Never trust client-side stock or price data
-- Avoid exposing internal implementation details in API responses
-- Protect sensitive information in logs and configs
-- Keep credentials out of source code
+- Never trust client-side stock, price, or order status
+- Avoid exposing internal details in API responses
+- Protect secrets in configs and logs
+- Keep JWT and infrastructure credentials out of committed source files
 
-## 16. Commit Conventions
+## 15. Commit Conventions
 
-Use clear, atomic, and review-friendly commits.
+Use clear, atomic, review-friendly commits.
 
 Recommended format:
 
@@ -335,68 +294,30 @@ type(scope): short summary
 Examples:
 
 ```text
-feat(order): add idempotent order creation flow
-fix(inventory): prevent oversell during concurrent stock deduction
-refactor(product): simplify product query service
-test(seckill): add concurrent purchase integration tests
-docs(api): document order creation endpoint
+feat(order): add idempotent seckill submit flow
+feat(payment): add payment result event publishing
+fix(inventory): prevent duplicate stock deduction on retry
+docs(api): update payment endpoint contract
+refactor(gateway): simplify jwt relay filter
 ```
 
-Recommended commit types:
+## 16. Definition of Done
 
-- `feat`
-- `fix`
-- `refactor`
-- `test`
-- `docs`
-- `chore`
+A task is not complete unless:
 
-Commit rules:
+- Business logic is correct
+- Edge cases and retry paths are considered
+- Necessary tests are added or updated where practical
+- API docs are updated if relevant
+- Deployment or runtime docs are updated when service topology changes
+- The result is reviewable and keeps service boundaries clear
 
-- One logical change per commit where practical
-- Write summaries in imperative mood
-- Do not mix broad refactoring with unrelated feature work
-- Include tests in the same commit when they directly validate the change
-
-## 17. Pull Request Conventions
-
-Every PR should be easy to review and include:
-
-- Clear problem statement
-- Summary of the solution
-- Scope and impacted modules
-- Testing performed
-- Risk notes and rollback considerations when applicable
-
-PR checklist:
-
-- Code follows Alibaba and Java style expectations
-- OpenAPI annotations and comments are updated if APIs changed
-- Tests are added or updated
-- Backward compatibility is considered
-- Configuration and schema changes are documented
-
-## 18. Definition of Done
-
-A task is not complete unless all of the following are true:
-
-- Business logic is implemented correctly
-- Edge cases and failure paths are considered
-- Necessary tests are added or updated
-- API documentation is updated if relevant
-- Logging and error handling are adequate
-- The change is small enough to review effectively
-
-## 19. Collaboration Notes for Coding Agents
+## 17. Collaboration Notes for Coding Agents
 
 When working in this repository:
 
-- Preserve clear service boundaries
-- Favor correctness over premature optimization
+- Prefer correctness over premature optimization
+- Preserve service ownership boundaries
 - Call out consistency risks explicitly
-- Do not introduce infrastructure complexity unless justified by the business scenario
-- Keep the codebase easy for human developers to understand and extend
-- Follow the role prompts under `agents/` when operating in a specialized agent role
-- Treat `docs/prd.md`, `docs/architecture.md`, and `docs/api.md` as living documents, not one-time artifacts
-
-If the repository later introduces concrete frameworks, module names, or architectural constraints, update this file to match the actual implementation rather than keeping this document generic.
+- Do not dump business-specific logic into `framework`
+- Keep README, runbook, and API docs aligned with actual implementation

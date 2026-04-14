@@ -1,244 +1,129 @@
 # 分布式商品库存与秒杀系统
 
-## 1. 项目简介
+## 项目简介
 
-这是一个基于 Spring Boot 3、MyBatis、MySQL、Redis 和 RocketMQ 的分布式商品库存与秒杀系统练手项目。
+这是一个基于 Spring Boot、Spring Cloud Alibaba、MyBatis、Redis、MySQL 和 RocketMQ 的分布式秒杀系统练手项目。
 
-当前已经落地的能力：
+当前仓库已经演进为多模块微服务工程，目标是：
 
-- 用户注册
-- 用户登录
-- JWT 令牌签发
-- MyBatis 用户持久化
-- Docker Compose 一键启动后端、MySQL、Redis、RocketMQ、Nginx
+- 支持秒杀场景下的高并发下单
+- 使用 Redis 做库存预扣、防重复下单和热点保护
+- 使用 RocketMQ 驱动下单、库存和支付相关的最终一致性链路
+- 保持订单、库存、支付三个核心领域的服务边界清晰
 
-## 2. 技术栈
-
-- Java 17
-- Spring Boot 3.3.5
-- MyBatis
-- MySQL
-- Redis
-- RocketMQ
-- Nginx
-- Docker / Docker Compose
-
-## 3. 目录说明
+## 当前模块
 
 ```text
 .
-├── Dockerfile
-├── docker-compose.yml
-├── nginx/
-│   └── default.conf
+├── framework/
+│   ├── framework-core
+│   └── framework-web
+├── services/
+│   ├── gateway-service
+│   ├── user-service
+│   ├── product-service
+│   ├── order-service
+│   ├── inventory-service
+│   └── payment-service
+├── deploy/
+├── docs/
 ├── resources/
-│   └── database/
-│       └── init_schema.sql
-├── src/
-│   ├── main/
-│   └── test/
-└── README.md
+└── pom.xml
 ```
 
-## 4. 启动方式
+各服务职责如下：
 
-### 4.1 环境要求
+- `gateway-service`：统一入口、路由转发、JWT 解析、用户 ID 透传
+- `user-service`：注册、登录、JWT 签发
+- `product-service`：商品详情查询、缓存读取、热点重建保护
+- `order-service`：秒杀下单、订单查询、订单状态更新
+- `inventory-service`：库存扣减、库存流水、库存结果消息回传
+- `payment-service`：支付受理、支付单持久化、支付结果消息发送
 
-- 已安装 Docker
-- 已安装 Docker Compose Plugin
+## 技术栈
 
-### 4.2 一键启动
+- Java 17
+- Spring Boot 3.3.5
+- Spring Cloud 2023
+- Spring Cloud Alibaba
+- Spring Cloud Gateway
+- OpenFeign
+- MyBatis
+- MySQL 8
+- Redis 7
+- RocketMQ 5
+- Nacos
+- Maven
+
+## 当前能力
+
+- 用户注册与登录
+- 网关 JWT 鉴权和 `X-User-Id` 透传
+- 商品详情缓存查询
+- Redis Lua 秒杀库存预扣与一人一单限制
+- 下单与库存扣减的消息最终一致性
+- 支付受理与订单状态更新的消息最终一致性
+- Docker Compose 微服务联调编排
+
+## 本地构建
 
 在项目根目录执行：
-
-```bash
-docker compose up -d --build
-```
-
-启动后会拉起以下服务：
-
-- `backend`：Spring Boot 后端服务，容器内端口 `8080`
-- `db`：MySQL 数据库，宿主机映射端口 `3306`
-- `redis`：Redis 缓存服务，宿主机映射端口 `6379`
-- `rmqnamesrv`：RocketMQ NameServer，宿主机映射端口 `9876`
-- `rmqbroker`：RocketMQ Broker，宿主机映射端口 `10909/10911/10912`
-- `nginx`：反向代理入口，宿主机映射端口 `80`
-
-### 4.3 停止服务
-
-```bash
-docker compose down
-```
-
-如果希望连同数据库数据卷一起清理：
-
-```bash
-docker compose down -v
-```
-
-## 5. 访问地址
-
-启动完成后可通过以下地址访问：
-
-- 应用入口：`http://localhost`
-- Swagger UI：`http://localhost/swagger-ui.html`
-- OpenAPI 文档：`http://localhost/v3/api-docs`
-
-## 6. 接口说明
-
-### 6.1 用户注册
-
-- 方法：`POST`
-- 路径：`/api/v1/auth/register`
-
-请求示例：
-
-```json
-{
-  "username": "alice",
-  "password": "123456"
-}
-```
-
-### 6.2 用户登录
-
-- 方法：`POST`
-- 路径：`/api/v1/auth/login`
-
-请求示例：
-
-```json
-{
-  "username": "alice",
-  "password": "123456"
-}
-```
-
-## 7. 容器配置说明
-
-### 7.1 数据库初始化
-
-MySQL 首次启动时会自动执行：
-
-`resources/database/init_schema.sql`
-
-用于初始化用户、商品、库存、订单相关表结构。
-
-### 7.2 Nginx 代理
-
-Nginx 配置文件位于：
-
-`nginx/default.conf`
-
-默认会将所有请求转发到后端服务 `backend:8080`。
-
-### 7.3 默认数据库参数
-
-- 数据库名：`seckill`
-- 用户名：`seckill`
-- 密码：`seckill123`
-- root 密码：`root123`
-- 宿主机端口：`3306`
-
-如需调整，可以直接修改 `docker-compose.yml` 中对应环境变量。
-
-### 7.4 默认 Redis 参数
-
-- 主机名（容器网络）：`redis`
-- 宿主机端口：`6379`
-- 数据库编号：`0`
-
-后端容器会通过以下环境变量自动连接 Redis：
-
-- `SPRING_DATA_REDIS_HOST`
-- `SPRING_DATA_REDIS_PORT`
-- `SPRING_DATA_REDIS_DATABASE`
-- `SPRING_DATA_REDIS_TIMEOUT`
-
-## 8. 本地开发运行
-
-如果不使用 Docker，也可以本地直接启动：
-
-```bash
-mvn spring-boot:run
-```
-
-默认情况下，应用配置支持通过环境变量覆盖数据库和 JWT 参数，例如：
-
-- `SPRING_DATASOURCE_URL`
-- `SPRING_DATASOURCE_USERNAME`
-- `SPRING_DATASOURCE_PASSWORD`
-- `SPRING_DATA_REDIS_HOST`
-- `SPRING_DATA_REDIS_PORT`
-- `SPRING_DATA_REDIS_DATABASE`
-- `ROCKETMQ_NAME_SERVER`
-- `SECURITY_JWT_SECRET`
-
-## 9. 常用命令
-
-构建项目：
 
 ```bash
 mvn clean package -DskipTests
 ```
 
-运行测试：
+## 本地启动
+
+### 方式一：逐服务启动
 
 ```bash
-mvn test
+mvn -pl services/user-service spring-boot:run
+mvn -pl services/product-service spring-boot:run
+mvn -pl services/inventory-service spring-boot:run
+mvn -pl services/order-service spring-boot:run
+mvn -pl services/payment-service spring-boot:run
+mvn -pl services/gateway-service spring-boot:run
 ```
 
-查看日志：
+### 方式二：Docker Compose 联调
 
 ```bash
-docker compose logs -f backend
-docker compose logs -f db
-docker compose logs -f redis
-docker compose logs -f rmqnamesrv
-docker compose logs -f rmqbroker
-docker compose logs -f nginx
+docker-compose -f deploy/docker-compose.microservices.yml up -d --build
 ```
 
-## 10. 说明
+会拉起：
 
-当前 Docker Compose 已包含后端、MySQL、Redis、RocketMQ 和 Nginx。
+- `nacos`
+- `db`
+- `redis`
+- `rmqnamesrv`
+- `rmqbroker`
+- `user-service`
+- `product-service`
+- `inventory-service`
+- `order-service`
+- `payment-service`
+- `gateway-service`
 
-补充设计文档：
+## 关键接口
 
-- `docs/seckill-order-design.md`
-- `docs/eventual-consistency-implementation.md`
+- 用户登录：`POST /api/v1/auth/login`
+- 商品详情：`GET /api/v1/products/{productId}`
+- 秒杀下单：`POST /api/v1/seckill/orders`
+- 订单查询：`GET /api/v1/orders/{orderId}`
+- 订单支付：`POST /api/v1/payments`
 
-## 11. MySQL 替代说明
+更完整的接口说明见 [docs/api.md](docs/api.md)。
 
-当前仓库已将原先的 MariaDB 假设替换为 MySQL，主要调整如下：
+## 关键文档
 
-- JDBC 驱动切换为 `com.mysql:mysql-connector-j`
-- 默认数据源地址切换为 `jdbc:mysql://127.0.0.1:3306/seckill`
-- Docker Compose 数据库镜像切换为 `mysql:8.4`
-- 初始化脚本保持 MySQL 兼容语法，并显式指定 `InnoDB`、`utf8mb4` 与 `utf8mb4_unicode_ci`
-- 容器健康检查改为 `mysqladmin ping`
+- [docs/architecture.md](docs/architecture.md)
+- [docs/api.md](docs/api.md)
+- [docs/microservice-runbook.md](docs/microservice-runbook.md)
+- [docs/microservice-evolution-architecture.md](docs/microservice-evolution-architecture.md)
+- [docs/order-inventory-microservice-refactor-plan.md](docs/order-inventory-microservice-refactor-plan.md)
 
-## 12. RocketMQ 配置说明
+## 说明
 
-项目已引入官方 `rocketmq-spring-boot-starter`，并预留了以下配置：
-
-- `rocketmq.name-server`
-- `rocketmq.producer.group`
-- `seckill.rocketmq.topics.order-create`
-- `seckill.rocketmq.topics.order-cancel`
-- `seckill.rocketmq.topics.inventory-compensate`
-
-Docker Compose 中已新增：
-
-- `redis`：`redis:7.4-alpine`
-- `rmqnamesrv`：`apache/rocketmq:5.3.2`
-- `rmqbroker`：`apache/rocketmq:5.3.2`
-
-默认 broker 配置文件位于：
-
-`deploy/rocketmq/broker.conf`
-
-注意：
-
-- 当前 `broker.conf` 的 `brokerIP1=rmqbroker` 适用于 Docker Compose 内部服务互联
-- 如果你要在宿主机直接启动 Spring Boot 并连接同一个 Docker RocketMQ，需要按宿主机可访问地址调整 `brokerIP1`
+当前仓库应以 `framework/` 和 `services/` 下的微服务模块为主进行开发与扩展。
