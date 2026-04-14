@@ -11,5 +11,8 @@ import org.apache.ibatis.annotations.Param;
 public interface MybatisInventoryRepository extends InventoryRepository {
 
     @Override
+    Integer findAvailableStockByProductId(@Param("productId") Long productId);
+
+    @Override
     int deductAvailableStock(@Param("productId") Long productId, @Param("quantity") Integer quantity);
 }

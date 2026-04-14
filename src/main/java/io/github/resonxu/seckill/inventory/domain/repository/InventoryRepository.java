@@ -6,6 +6,14 @@ package io.github.resonxu.seckill.inventory.domain.repository;
 public interface InventoryRepository {
 
     /**
+     * 查询商品当前可用库存。
+     *
+     * @param productId 商品ID
+     * @return 可用库存，不存在时返回 null
+     */
+    Integer findAvailableStockByProductId(Long productId);
+
+    /**
      * 条件扣减可用库存。
      *
      * @param productId 商品ID

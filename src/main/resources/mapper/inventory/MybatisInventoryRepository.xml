@@ -4,6 +4,14 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="io.github.resonxu.seckill.inventory.infrastructure.persistence.MybatisInventoryRepository">
 
+    <select id="findAvailableStockByProductId" resultType="java.lang.Integer">
+        SELECT available_stock
+        FROM t_inventory
+        WHERE product_id = #{productId}
+          AND is_deleted = 0
+        LIMIT 1
+    </select>
+
     <update id="deductAvailableStock">
         UPDATE t_inventory
         SET available_stock = available_stock - #{quantity}
