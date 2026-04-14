@@ -1,0 +1,281 @@
+services:
+  nacos:
+    image: nacos/nacos-server:v2.4.3
+    container_name: seckill-nacos
+    restart: unless-stopped
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+      JVM_XMS: 256m
+      JVM_XMX: 256m
+      JVM_XMN: 128m
+      TZ: Asia/Shanghai
+    ports:
+      - "8848:8848"
+    networks:
+      - seckill-network
+
+  db:
+    image: mysql:8.4
+    container_name: seckill-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: seckill
+      MYSQL_USER: seckill
+      MYSQL_PASSWORD: seckill123
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../resources/database/init_schema.sql:/docker-entrypoint-initdb.d/01-init_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - seckill-network
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: seckill-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - seckill-network
+
+  rmqnamesrv:
+    image: apache/rocketmq:5.3.2
+    container_name: seckill-rmqnamesrv
+    restart: unless-stopped
+    command: sh mqnamesrv
+    ports:
+      - "9876:9876"
+    networks:
+      - seckill-network
+
+  rmqbroker:
+    image: apache/rocketmq:5.3.2
+    container_name: seckill-rmqbroker
+    restart: unless-stopped
+    command: sh mqbroker -n rmqnamesrv:9876 -c /home/rocketmq/rocketmq-5.3.2/conf/broker.conf
+    environment:
+      TZ: Asia/Shanghai
+    depends_on:
+      - rmqnamesrv
+    ports:
+      - "10909:10909"
+      - "10911:10911"
+      - "10912:10912"
+    volumes:
+      - ./rocketmq/broker.conf:/home/rocketmq/rocketmq-5.3.2/conf/broker.conf:ro
+    networks:
+      - seckill-network
+
+  user-service:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile.service
+      args:
+        MODULE_PATH: services/user-service
+        ARTIFACT_NAME: user-service
+    container_name: seckill-user-service
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: 8084
+      NACOS_SERVER_ADDR: nacos:8848
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/seckill?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: seckill
+      SPRING_DATASOURCE_PASSWORD: seckill123
+      SECURITY_JWT_SECRET: ReplaceWithAtLeast32CharsJwtSecretKey123456
+      SECURITY_JWT_EXPIRATION: 7200
+    depends_on:
+      db:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+    networks:
+      - seckill-network
+
+  product-service:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile.service
+      args:
+        MODULE_PATH: services/product-service
+        ARTIFACT_NAME: product-service
+    container_name: seckill-product-service
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: 8083
+      NACOS_SERVER_ADDR: nacos:8848
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/seckill?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: seckill
+      SPRING_DATASOURCE_PASSWORD: seckill123
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_TIMEOUT: 3000ms
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+    networks:
+      - seckill-network
+
+  inventory-service:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile.service
+      args:
+        MODULE_PATH: services/inventory-service
+        ARTIFACT_NAME: inventory-service
+    container_name: seckill-inventory-service
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: 8082
+      NACOS_SERVER_ADDR: nacos:8848
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/seckill?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: seckill
+      SPRING_DATASOURCE_PASSWORD: seckill123
+      ROCKETMQ_NAME_SERVER: rmqnamesrv:9876
+    depends_on:
+      db:
+        condition: service_healthy
+      rmqnamesrv:
+        condition: service_started
+      rmqbroker:
+        condition: service_started
+      nacos:
+        condition: service_started
+    networks:
+      - seckill-network
+
+  order-service:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile.service
+      args:
+        MODULE_PATH: services/order-service
+        ARTIFACT_NAME: order-service
+    container_name: seckill-order-service
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: 8081
+      NACOS_SERVER_ADDR: nacos:8848
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/seckill?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: seckill
+      SPRING_DATASOURCE_PASSWORD: seckill123
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_TIMEOUT: 3000ms
+      ROCKETMQ_NAME_SERVER: rmqnamesrv:9876
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rmqnamesrv:
+        condition: service_started
+      rmqbroker:
+        condition: service_started
+      nacos:
+        condition: service_started
+    networks:
+      - seckill-network
+
+  payment-service:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile.service
+      args:
+        MODULE_PATH: services/payment-service
+        ARTIFACT_NAME: payment-service
+    container_name: seckill-payment-service
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: 8085
+      NACOS_SERVER_ADDR: nacos:8848
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/seckill?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: seckill
+      SPRING_DATASOURCE_PASSWORD: seckill123
+      ROCKETMQ_NAME_SERVER: rmqnamesrv:9876
+    depends_on:
+      db:
+        condition: service_healthy
+      rmqnamesrv:
+        condition: service_started
+      rmqbroker:
+        condition: service_started
+      nacos:
+        condition: service_started
+      order-service:
+        condition: service_started
+    networks:
+      - seckill-network
+
+  gateway-service:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile.service
+      args:
+        MODULE_PATH: services/gateway-service
+        ARTIFACT_NAME: gateway-service
+    container_name: seckill-gateway-service
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: 8080
+      NACOS_SERVER_ADDR: nacos:8848
+      SECURITY_JWT_SECRET: ReplaceWithAtLeast32CharsJwtSecretKey123456
+      SECURITY_JWT_EXPIRATION: 7200
+    depends_on:
+      nacos:
+        condition: service_started
+      user-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    networks:
+      - seckill-network
+
+volumes:
+  mysql-data:
+  redis-data:
+
+networks:
+  seckill-network:
+    driver: bridge

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.resonxu.seckill.product.infrastructure.persistence.MybatisProductRepository">
+
+    <resultMap id="ProductDetailResultMap" type="io.github.resonxu.seckill.product.domain.model.ProductDetail">
+        <id property="id" column="id"/>
+        <result property="productName" column="product_name"/>
+        <result property="price" column="price"/>
+        <result property="status" column="status"/>
+        <result property="availableStock" column="available_stock"/>
+    </resultMap>
+
+    <select id="findDetailById" resultMap="ProductDetailResultMap">
+        SELECT p.id,
+               p.product_name,
+               p.price,
+               p.status,
+               COALESCE(i.available_stock, 0) AS available_stock
+        FROM t_product p
+        LEFT JOIN t_inventory i
+               ON i.product_id = p.id
+              AND i.is_deleted = 0
+        WHERE p.id = #{productId}
+          AND p.is_deleted = 0
+        LIMIT 1
+    </select>
+</mapper>

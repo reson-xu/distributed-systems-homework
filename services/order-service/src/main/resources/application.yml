@@ -1,0 +1,46 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: order-service
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: ${SPRING_DATA_REDIS_TIMEOUT:3000ms}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+
+mybatis:
+  mapper-locations: classpath:/mapper/**/*.xml
+  type-aliases-package: io.github.resonxu.seckill
+  configuration:
+    map-underscore-to-camel-case: true
+
+rocketmq:
+  name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
+  producer:
+    group: ${ROCKETMQ_PRODUCER_GROUP:order-service-producer-group}
+
+seckill:
+  rocketmq:
+    topics:
+      order-create: ${SECKILL_ROCKETMQ_TOPIC_ORDER_CREATE:seckill-order-create}
+      order-create-result: ${SECKILL_ROCKETMQ_TOPIC_ORDER_CREATE_RESULT:seckill-order-create-result}
+      order-cancel: ${SECKILL_ROCKETMQ_TOPIC_ORDER_CANCEL:seckill-order-cancel}
+      inventory-compensate: ${SECKILL_ROCKETMQ_TOPIC_INVENTORY_COMPENSATE:seckill-inventory-compensate}
+      payment-result: ${SECKILL_ROCKETMQ_TOPIC_PAYMENT_RESULT:seckill-payment-result}
+    consumer-groups:
+      order-create-result: ${SECKILL_ROCKETMQ_CONSUMER_GROUP_ORDER_CREATE_RESULT:order-service-order-create-result-consumer-group}
+      payment-result: ${SECKILL_ROCKETMQ_CONSUMER_GROUP_PAYMENT_RESULT:order-service-payment-result-consumer-group}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

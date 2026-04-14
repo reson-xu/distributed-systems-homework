@@ -10,7 +10,7 @@
 - 用户登录
 - JWT 令牌签发
 - MyBatis 用户持久化
-- Docker Compose 一键启动后端、数据库、RocketMQ、Nginx
+- Docker Compose 一键启动后端、MySQL、Redis、RocketMQ、Nginx
 
 ## 2. 技术栈
 
@@ -59,6 +59,7 @@ docker compose up -d --build
 
 - `backend`：Spring Boot 后端服务，容器内端口 `8080`
 - `db`：MySQL 数据库，宿主机映射端口 `3306`
+- `redis`：Redis 缓存服务，宿主机映射端口 `6379`
 - `rmqnamesrv`：RocketMQ NameServer，宿主机映射端口 `9876`
 - `rmqbroker`：RocketMQ Broker，宿主机映射端口 `10909/10911/10912`
 - `nginx`：反向代理入口，宿主机映射端口 `80`
@@ -141,6 +142,19 @@ Nginx 配置文件位于：
 
 如需调整，可以直接修改 `docker-compose.yml` 中对应环境变量。
 
+### 7.4 默认 Redis 参数
+
+- 主机名（容器网络）：`redis`
+- 宿主机端口：`6379`
+- 数据库编号：`0`
+
+后端容器会通过以下环境变量自动连接 Redis：
+
+- `SPRING_DATA_REDIS_HOST`
+- `SPRING_DATA_REDIS_PORT`
+- `SPRING_DATA_REDIS_DATABASE`
+- `SPRING_DATA_REDIS_TIMEOUT`
+
 ## 8. 本地开发运行
 
 如果不使用 Docker，也可以本地直接启动：
@@ -154,6 +168,9 @@ mvn spring-boot:run
 - `SPRING_DATASOURCE_URL`
 - `SPRING_DATASOURCE_USERNAME`
 - `SPRING_DATASOURCE_PASSWORD`
+- `SPRING_DATA_REDIS_HOST`
+- `SPRING_DATA_REDIS_PORT`
+- `SPRING_DATA_REDIS_DATABASE`
 - `ROCKETMQ_NAME_SERVER`
 - `SECURITY_JWT_SECRET`
 
@@ -176,6 +193,7 @@ mvn test
 ```bash
 docker compose logs -f backend
 docker compose logs -f db
+docker compose logs -f redis
 docker compose logs -f rmqnamesrv
 docker compose logs -f rmqbroker
 docker compose logs -f nginx
@@ -183,7 +201,12 @@ docker compose logs -f nginx
 
 ## 10. 说明
 
-当前 Docker Compose 已包含后端、MySQL、RocketMQ 和 Nginx。
+当前 Docker Compose 已包含后端、MySQL、Redis、RocketMQ 和 Nginx。
+
+补充设计文档：
+
+- `docs/seckill-order-design.md`
+- `docs/eventual-consistency-implementation.md`
 
 ## 11. MySQL 替代说明
 
@@ -207,6 +230,7 @@ docker compose logs -f nginx
 
 Docker Compose 中已新增：
 
+- `redis`：`redis:7.4-alpine`
 - `rmqnamesrv`：`apache/rocketmq:5.3.2`
 - `rmqbroker`：`apache/rocketmq:5.3.2`
 
