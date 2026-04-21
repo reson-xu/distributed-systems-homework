@@ -2,22 +2,26 @@
 
 ## 1. 设计范围
 
-当前阶段设计用户认证接口与商品详情接口。
+当前文档覆盖仓库中已经实现的基础业务接口：
 
-统一前缀建议：
+- 用户认证与用户资料
+- 商品详情、商品列表、秒杀商品列表
+- 秒杀订单提交与订单查询
+- 库存查询
+- 支付提交、支付查询、支付回调
+
+统一前缀：
 
 `/api/v1`
 
 ## 2. 接口风格
 
 - 接口采用 RESTful 风格
-- 当前仅保留最小可说明接口
-- 返回结构保持统一
-- 控制器对外方法需要在函数上方补充 `/** ... */` 风格的 JavaDoc 注释
+- 返回结构统一使用 `Result`
+- 需要鉴权的接口统一通过 `Authorization: Bearer <JWT>` 访问网关
+- 支付回调接口当前不要求 JWT
 
 ## 3. 通用返回结构
-
-统一返回模型命名为 `Result`。
 
 ```json
 {
@@ -31,37 +35,21 @@
 
 - `code`：业务状态码，`0` 表示成功
 - `message`：结果说明
-- `data`：返回数据
+- `data`：响应数据
 
-## 4. 用户认证接口
-
-认证相关能力统一归属 `auth`，用户资料与用户领域对象归属 `user`。
+## 4. 用户接口
 
 ### 4.1 用户注册
 
 - Method: `POST`
 - Path: `/api/v1/auth/register`
-- Description: 注册新用户账号
 
-#### 请求体
+请求体：
 
 ```json
 {
   "username": "alice",
   "password": "123456"
-}
-```
-
-#### 响应体
-
-```json
-{
-  "code": "0",
-  "message": "success",
-  "data": {
-    "userId": 1,
-    "username": "alice"
-  }
 }
 ```
 
@@ -69,9 +57,8 @@
 
 - Method: `POST`
 - Path: `/api/v1/auth/login`
-- Description: 用户登录
 
-#### 请求体
+请求体：
 
 ```json
 {
@@ -80,7 +67,7 @@
 }
 ```
 
-#### 响应体
+响应体：
 
 ```json
 {
@@ -94,78 +81,91 @@
 }
 ```
 
-### 4.3 字段说明
+### 4.3 查询当前用户
 
-- `username`：用户名
-- `password`：密码
-- `userId`：用户唯一标识
-- `token`：登录成功后签发的 JWT 令牌
+- Method: `GET`
+- Path: `/api/v1/auth/me`
+- Header: `Authorization: Bearer <JWT>`
 
-## 5. DTO / VO 建议
+### 4.4 退出登录
 
-### 5.1 AuthRegisterDTO
+- Method: `POST`
+- Path: `/api/v1/auth/logout`
+- Header: `Authorization: Bearer <JWT>`
+- Description: 当前实现为无状态 JWT，服务端只校验令牌有效性，客户端自行丢弃令牌
 
-- `username`
-- `password`
+### 4.5 查询用户资料
 
-### 5.2 AuthRegisterVO
+- Method: `GET`
+- Path: `/api/v1/users/{userId}`
 
-- `userId`
-- `username`
-
-### 5.3 AuthLoginDTO
-
-- `username`
-- `password`
-
-### 5.4 AuthLoginVO
+响应字段：
 
 - `userId`
 - `username`
-- `token`
+- `status`
 
-## 6. 商品接口
+### 4.6 查询秒杀资格
 
-### 6.1 商品详情
+- Method: `GET`
+- Path: `/api/v1/users/{userId}/eligibility/seckill`
+
+响应字段：
+
+- `userId`
+- `eligible`
+- `reason`
+
+## 5. 商品接口
+
+### 5.1 商品列表
+
+- Method: `GET`
+- Path: `/api/v1/products`
+- Query: `page`、`size`
+
+### 5.2 商品详情
 
 - Method: `GET`
 - Path: `/api/v1/products/{productId}`
-- Description: 查询商品详情，服务端优先读取 Redis 缓存，未命中时回源数据库
+- Description: 服务端优先读取 Redis 缓存，未命中时回源数据库
 
-#### 响应体
+响应字段：
 
-```json
-{
-  "code": "0",
-  "message": "success",
-  "data": {
-    "productId": 1,
-    "productName": "iPhone 16",
-    "price": 6999.00,
-    "status": 1,
-    "availableStock": 100
-  }
-}
-```
+- `productId`
+- `productName`
+- `price`
+- `status`
+- `availableStock`
 
-### 6.2 字段说明
+### 5.3 商品可售状态
 
-- `productId`：商品ID
-- `productName`：商品名称
-- `price`：商品价格
-- `status`：商品状态
-- `availableStock`：可用库存
+- Method: `GET`
+- Path: `/api/v1/products/{productId}/availability`
 
-## 7. 秒杀订单接口
+响应字段：
 
-### 7.1 提交秒杀订单
+- `productId`
+- `status`
+- `availableStock`
+- `available`
+
+### 5.4 秒杀商品列表
+
+- Method: `GET`
+- Path: `/api/v1/seckill/products`
+- Query: `page`、`size`
+- Description: 返回当前上架且库存大于 0 的商品
+
+## 6. 秒杀订单接口
+
+### 6.1 提交秒杀订单
 
 - Method: `POST`
 - Path: `/api/v1/seckill/orders`
 - Header: `Authorization: Bearer <JWT>`
-- Description: 受理秒杀下单请求，完成幂等校验、Redis 预扣库存，并异步发送 RocketMQ 下单消息
 
-#### 请求体
+请求体：
 
 ```json
 {
@@ -174,7 +174,7 @@
 }
 ```
 
-#### 响应体
+响应体：
 
 ```json
 {
@@ -187,13 +187,79 @@
 }
 ```
 
-### 7.2 业务失败码
+### 6.2 当前用户订单列表
+
+- Method: `GET`
+- Path: `/api/v1/orders`
+- Header: `Authorization: Bearer <JWT>`
+- Query: `page`、`size`
+
+### 6.3 订单详情
+
+- Method: `GET`
+- Path: `/api/v1/orders/{orderId}`
+- Header: `Authorization: Bearer <JWT>`
+- Description: 当前接口仍保留服务间查询用途
+
+### 6.4 订单状态
+
+- Method: `GET`
+- Path: `/api/v1/orders/{orderId}/status`
+- Header: `Authorization: Bearer <JWT>`
+
+响应字段：
+
+- `orderId`
+- `orderStatus`
+- `orderStatusDesc`
+- `failReason`
+
+### 6.5 取消订单
+
+- Method: `POST`
+- Path: `/api/v1/orders/{orderId}/cancel`
+- Header: `Authorization: Bearer <JWT>`
+- Description: 当前仅允许取消未支付订单
+
+### 6.6 订单时间线
+
+- Method: `GET`
+- Path: `/api/v1/orders/{orderId}/timeline`
+- Header: `Authorization: Bearer <JWT>`
+
+响应字段：
+
+- `orderId`
+- `currentStatus`
+- `currentStatusDesc`
+- `events`
+
+### 6.7 业务失败码
 
 - `3001`：重复秒杀同一商品
 - `3002`：库存不足
 - `3003`：商品不处于可秒杀状态
 - `3004`：重复请求
 - `3005`：秒杀请求提交失败
+
+## 7. 库存接口
+
+### 7.1 查询库存详情
+
+- Method: `GET`
+- Path: `/api/v1/inventories/{productId}`
+
+响应字段：
+
+- `productId`
+- `totalStock`
+- `availableStock`
+- `lockedStock`
+
+### 7.2 查询可用库存
+
+- Method: `GET`
+- Path: `/api/v1/inventories/{productId}/available-stock`
 
 ## 8. 支付接口
 
@@ -202,9 +268,8 @@
 - Method: `POST`
 - Path: `/api/v1/payments`
 - Header: `Authorization: Bearer <JWT>`
-- Description: 校验订单可支付后创建支付单，并异步发送支付结果事件驱动订单状态更新
 
-#### 请求体
+请求体：
 
 ```json
 {
@@ -214,38 +279,54 @@
 }
 ```
 
-#### 响应体
+### 8.2 查询支付单详情
+
+- Method: `GET`
+- Path: `/api/v1/payments/{paymentId}`
+- Header: `Authorization: Bearer <JWT>`
+
+### 8.3 按订单查询支付单
+
+- Method: `GET`
+- Path: `/api/v1/payments/order/{orderId}`
+- Header: `Authorization: Bearer <JWT>`
+
+### 8.4 支付结果回调
+
+- Method: `POST`
+- Path: `/api/v1/payments/notify`
+
+请求体：
 
 ```json
 {
-  "code": "0",
-  "message": "success",
-  "data": {
-    "paymentId": 1912222222222222222,
-    "status": "SUCCESS"
-  }
+  "paymentId": 1912222222222222222,
+  "success": true,
+  "failReason": null
 }
 ```
 
-### 8.2 业务失败码
+### 8.5 支付单响应字段
 
-- `4001`：订单不存在
+- `paymentId`
+- `orderId`
+- `userId`
+- `requestId`
+- `paymentAmount`
+- `paymentStatus`
+- `paymentStatusDesc`
+- `failReason`
+
+### 8.6 业务失败码
+
+- `4001`：订单不存在或支付单不存在
 - `4002`：订单当前不可支付
 - `4003`：支付请求提交失败
 - `4004`：支付用户与订单用户不匹配
 
-## 9. 后续预留
-
-后续可继续补充以下接口，但当前阶段不纳入设计范围：
-
-- 库存查询
-- 订单取消
-- 订单超时关单
-
-## 10. 数据可见性约定
+## 9. 数据可见性约定
 
 - 面向业务侧的接口默认只返回 `is_deleted = 0` 的数据
 - 逻辑删除的数据不应通过普通查询接口返回
-- 后续新增删除类接口时，默认语义应为更新 `is_deleted = 1`
-- 当前登录接口默认通过响应体返回 JWT，后续如切换到 Cookie 鉴权，需要同步更新接口契约
+- 登录接口当前通过响应体返回 JWT
 - 商品详情接口采用 Cache Aside 模式，Redis Key 使用统一规范 `seckill:业务域:数据类型:业务主键`

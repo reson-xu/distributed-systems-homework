@@ -52,6 +52,24 @@
         LIMIT 1
     </select>
 
+    <select id="listByUserId" resultMap="SeckillOrderResultMap">
+        SELECT id,
+               user_id,
+               product_id,
+               request_id,
+               order_amount,
+               order_status,
+               fail_reason,
+               create_source,
+               created_at,
+               updated_at
+        FROM t_order
+        WHERE user_id = #{userId}
+          AND is_deleted = 0
+        ORDER BY id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
     <insert id="insert" parameterType="io.github.resonxu.seckill.order.domain.model.SeckillOrder">
         INSERT INTO t_order (
             id,

@@ -12,6 +12,9 @@ import org.apache.ibatis.annotations.Param;
 public interface MybatisUserRepository extends UserRepository {
 
     @Override
+    User findById(@Param("userId") Long userId);
+
+    @Override
     User findActiveByUsername(@Param("username") String username);
 
     /**

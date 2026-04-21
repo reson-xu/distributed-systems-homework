@@ -26,4 +26,36 @@
           AND p.is_deleted = 0
         LIMIT 1
     </select>
+
+    <select id="listProducts" resultMap="ProductDetailResultMap">
+        SELECT p.id,
+               p.product_name,
+               p.price,
+               p.status,
+               COALESCE(i.available_stock, 0) AS available_stock
+        FROM t_product p
+        LEFT JOIN t_inventory i
+               ON i.product_id = p.id
+              AND i.is_deleted = 0
+        WHERE p.is_deleted = 0
+        ORDER BY p.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="listSeckillProducts" resultMap="ProductDetailResultMap">
+        SELECT p.id,
+               p.product_name,
+               p.price,
+               p.status,
+               COALESCE(i.available_stock, 0) AS available_stock
+        FROM t_product p
+        LEFT JOIN t_inventory i
+               ON i.product_id = p.id
+              AND i.is_deleted = 0
+        WHERE p.is_deleted = 0
+          AND p.status = 1
+          AND COALESCE(i.available_stock, 0) > 0
+        ORDER BY p.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
 </mapper>

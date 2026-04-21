@@ -13,4 +13,10 @@ public interface MybatisProductRepository extends ProductRepository {
 
     @Override
     ProductDetail findDetailById(@Param("productId") Long productId);
+
+    @Override
+    java.util.List<ProductDetail> listProducts(@Param("offset") int offset, @Param("limit") int limit);
+
+    @Override
+    java.util.List<ProductDetail> listSeckillProducts(@Param("offset") int offset, @Param("limit") int limit);
 }

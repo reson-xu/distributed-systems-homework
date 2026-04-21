@@ -94,6 +94,7 @@ docker-compose -f deploy/docker-compose.microservices.yml up -d --build
 
 会拉起：
 
+- `nginx`
 - `nacos`
 - `db`
 - `redis`
@@ -105,6 +106,11 @@ docker-compose -f deploy/docker-compose.microservices.yml up -d --build
 - `order-service`
 - `payment-service`
 - `gateway-service`
+
+对外入口：
+
+- `http://localhost`
+- `http://localhost/api/v1/...`
 
 ## 关键接口
 
@@ -127,3 +133,5 @@ docker-compose -f deploy/docker-compose.microservices.yml up -d --build
 ## 说明
 
 当前仓库应以 `framework/` 和 `services/` 下的微服务模块为主进行开发与扩展。
+
+当前默认通过 `nginx -> gateway-service` 对外暴露接口，`gateway-service` 不再直接映射宿主机端口。

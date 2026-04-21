@@ -16,6 +16,21 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <select id="findById" resultMap="PaymentOrderResultMap">
+        SELECT id,
+               order_id,
+               user_id,
+               request_id,
+               payment_amount,
+               payment_status,
+               fail_reason,
+               created_at,
+               updated_at
+        FROM t_payment_order
+        WHERE id = #{paymentId}
+        LIMIT 1
+    </select>
+
     <select id="findByRequestId" resultMap="PaymentOrderResultMap">
         SELECT id,
                order_id,

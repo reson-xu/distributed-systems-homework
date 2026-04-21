@@ -9,6 +9,14 @@ import org.apache.ibatis.annotations.Param;
 public interface PaymentOrderRepository {
 
     /**
+     * 按支付单ID查询支付单。
+     *
+     * @param paymentId 支付单ID
+     * @return 支付单
+     */
+    PaymentOrder findById(Long paymentId);
+
+    /**
      * 按支付请求ID查询支付单。
      *
      * @param requestId 支付请求ID

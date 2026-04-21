@@ -8,6 +8,14 @@ import io.github.resonxu.seckill.user.domain.model.User;
 public interface UserRepository {
 
     /**
+     * 根据用户ID查询有效用户。
+     *
+     * @param userId 用户ID
+     * @return 用户实体，不存在时返回 null
+     */
+    User findById(Long userId);
+
+    /**
      * 根据用户名查询有效用户。
      *
      * @param username 用户名

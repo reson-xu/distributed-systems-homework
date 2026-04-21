@@ -4,8 +4,26 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="io.github.resonxu.seckill.inventory.infrastructure.persistence.MybatisInventoryRepository">
 
+    <resultMap id="InventorySnapshotResultMap" type="io.github.resonxu.seckill.inventory.domain.model.InventorySnapshot">
+        <result property="productId" column="product_id"/>
+        <result property="totalStock" column="total_stock"/>
+        <result property="availableStock" column="available_stock"/>
+        <result property="lockedStock" column="locked_stock"/>
+    </resultMap>
+
     <select id="findAvailableStockByProductId" resultType="java.lang.Integer">
         SELECT available_stock
+        FROM t_inventory
+        WHERE product_id = #{productId}
+          AND is_deleted = 0
+        LIMIT 1
+    </select>
+
+    <select id="findSnapshotByProductId" resultMap="InventorySnapshotResultMap">
+        SELECT product_id,
+               total_stock,
+               available_stock,
+               locked_stock
         FROM t_inventory
         WHERE product_id = #{productId}
           AND is_deleted = 0

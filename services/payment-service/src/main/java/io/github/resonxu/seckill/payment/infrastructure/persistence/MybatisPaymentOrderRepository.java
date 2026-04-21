@@ -12,6 +12,9 @@ import org.apache.ibatis.annotations.Param;
 public interface MybatisPaymentOrderRepository extends PaymentOrderRepository {
 
     @Override
+    PaymentOrder findById(@Param("paymentId") Long paymentId);
+
+    @Override
     PaymentOrder findByRequestId(@Param("requestId") String requestId);
 
     @Override

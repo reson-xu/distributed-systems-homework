@@ -28,6 +28,20 @@
         LIMIT 1
     </select>
 
+    <select id="findById" resultMap="UserResultMap">
+        SELECT id,
+               username,
+               password,
+               status,
+               is_deleted,
+               created_at,
+               updated_at
+        FROM t_user
+        WHERE id = #{userId}
+          AND is_deleted = 0
+        LIMIT 1
+    </select>
+
     <insert id="insert" parameterType="io.github.resonxu.seckill.user.domain.model.User"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO t_user (username, password, status, is_deleted)

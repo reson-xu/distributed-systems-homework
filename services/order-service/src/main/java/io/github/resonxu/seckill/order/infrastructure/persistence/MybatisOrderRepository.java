@@ -21,6 +21,13 @@ public interface MybatisOrderRepository extends OrderRepository {
     );
 
     @Override
+    java.util.List<SeckillOrder> listByUserId(
+            @Param("userId") Long userId,
+            @Param("offset") int offset,
+            @Param("limit") int limit
+    );
+
+    @Override
     int insert(SeckillOrder seckillOrder);
 
     @Override

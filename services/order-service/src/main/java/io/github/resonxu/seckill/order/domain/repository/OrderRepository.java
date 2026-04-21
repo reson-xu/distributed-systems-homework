@@ -25,6 +25,16 @@ public interface OrderRepository {
     SeckillOrder findByIdAndUserId(Long orderId, Long userId);
 
     /**
+     * 分页查询用户订单列表。
+     *
+     * @param userId 用户ID
+     * @param offset 偏移量
+     * @param limit 查询条数
+     * @return 订单列表
+     */
+    java.util.List<SeckillOrder> listByUserId(Long userId, int offset, int limit);
+
+    /**
      * 新增订单记录。
      *
      * @param seckillOrder 秒杀订单

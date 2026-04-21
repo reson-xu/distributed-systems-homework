@@ -67,6 +67,9 @@ public class JwtUserRelayFilter implements GlobalFilter, Ordered {
     }
 
     private boolean requiresAuthentication(String path) {
+        if (path.startsWith("/api/v1/payments/notify")) {
+            return false;
+        }
         return path.startsWith("/api/v1/seckill/orders")
                 || path.startsWith("/api/v1/orders")
                 || path.startsWith("/api/v1/payments");

@@ -2,6 +2,7 @@ package io.github.resonxu.seckill.inventory.interfaces.controller;
 
 import io.github.resonxu.seckill.common.response.Result;
 import io.github.resonxu.seckill.inventory.application.InventoryQueryAppService;
+import io.github.resonxu.seckill.inventory.interfaces.vo.InventoryDetailVO;
 import io.github.resonxu.seckill.inventory.interfaces.vo.InventoryStockVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +22,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class InventoryQueryController {
 
     private final InventoryQueryAppService inventoryQueryAppService;
+
+    /**
+     * 查询商品库存详情。
+     *
+     * @param productId 商品ID
+     * @return 库存详情
+     */
+    @Operation(summary = "查询商品库存详情", description = "返回总库存、可用库存和锁定库存")
+    @GetMapping("/{productId}")
+    public Result<InventoryDetailVO> getInventoryDetail(@PathVariable Long productId) {
+        return Result.success(inventoryQueryAppService.getInventoryDetail(productId));
+    }
 
     /**
      * 查询商品当前可用库存。
